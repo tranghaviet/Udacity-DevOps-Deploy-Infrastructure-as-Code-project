@@ -6,7 +6,7 @@ Please note that all supporting material for this course can be found in [this G
 
 # Deploy a high-availability web app using CloudFormation
 
-In this project, you’ll deploy web servers for a highly available web app using CloudFormation. You will write the code that creates and deploys the infrastructure and application for an Instagram-like app from the ground up. You will begin with deploying the networking components, followed by servers, security roles and software.  The procedure you follow here will become part of your portfolio of cloud projects. You’ll do it exactly as it’s done on the job - following best practices and scripting as much as possible. 
+In this project, you’ll deploy web servers for a highly available web app using CloudFormation. You will write the code that creates and deploys the infrastructure and application for an Instagram-like app from the ground up. You will begin with deploying the networking components, followed by servers, security roles and software.  The procedure you follow here will become part of your portfolio of cloud projects. You’ll do it exactly as it’s done on the job - following best practices and scripting as much as possible.
 
 ## Getting Started
 
@@ -23,7 +23,7 @@ In this project, you’ll deploy web servers for a highly available web app usin
 You can get started by cloning this repo in your local workspace:
 
 ```
-git clone git@github.com:udacity/-cd12352-Deploy-Infrastructure-as-Code-project.git
+git clone git@github.com:udacity/-cd12352-Deploy-Infrastructure-as-Code-project.git Udacity-DevOps-Deploy-Infrastructure-as-Code-project
 ```
 
 ## Testing
@@ -41,7 +41,7 @@ No tests required for this project.
 4. Create any required script files to automate spin up and tear down of the CloudFormation stacks.
 
 5. Update the README.md file in the `starter` folder with creation and deletion instructions, as well as any useful information regarding your solution.
-   
+
 6.  Submit your solution as a GitHub link or a zipped file containing the diagram image, CloudFormation yml and json files, automation scripts and README file.
 
 ## License

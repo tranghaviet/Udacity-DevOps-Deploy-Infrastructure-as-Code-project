@@ -2,10 +2,20 @@
 # [YOUR NAME HERE]
 
 ## Spin up instructions
-TODO
+
+```sh
+# Check the region in the create.sh file
+./create.sh myFirstStack network.yml network-parameters.json
+# Check the region in the update.sh file
+# ./update.sh mySecStack udagram.yml udagram-parameters.json
+./update.sh myFirstStack udagram.yml udagram-parameters.json
+```
 
 ## Tear down instructions
-TODO
+
+```sh
+./delete.sh myFirstStack
+```
 
 ## Other considerations
 TODO (optional)
