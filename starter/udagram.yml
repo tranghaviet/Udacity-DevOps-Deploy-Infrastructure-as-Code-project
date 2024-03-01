@@ -1,39 +1,11 @@
 Description: CD12352 - Infrastructure as Code Project - Udagram
 
 Parameters:
-
   EnvironmentName:
     Description: An environment name that will be prefixed to resource names
     Type: String
 
 Resources:
-  # InstanceProfile:
-  #     Type: AWS::IAM::InstanceProfile
-  #     Properties:
-  #       Roles:
-  #         - !Ref EC2Role
-  # EC2Role:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     RoleName: UdacityS3ReadOnlyC2
-  #     AssumeRolePolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: ec2.amazonaws.com
-  #           Action: sts:AssumeRole
-  #     Policies:
-  #       - PolicyName: S3ReadOnlyAccess
-  #         PolicyDocument:
-  #           Version: '2012-10-17'
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - s3:Get*
-  #                 - s3:List*
-  #               Resource: '*'
-
   LBSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -70,24 +42,11 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
-        # - IpProtocol: -1
-        #   CidrIp: 0.0.0.0/0
-  # UdagramWebAppUserData:
-  #   Type: "AWS::CloudFormation::Resource"
-  #   Properties:
-  #     Value: |
-  #       #!/bin/bash
-  #       apt-get update -y
-  #       sudo apt-get install nginx -y
-  #       service nginx start
   WebAppLaunchTemplate:
-    # Type: AWS::AutoScaling::LaunchConfiguration
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        # UserData: !Ref UdagramWebAppUserData
         UserData:
-          #   Fn::Base64: !Sub |
           Fn::Base64: |
             #!/bin/bash
             apt-get update -y
@@ -96,55 +55,54 @@ Resources:
       ImageId: ami-0c7217cdde317cfec # ubuntu-22 at us-east-1
       KeyName: udacity
       SecurityGroups:
-      - Ref: WebServerSecGroup
+        - Ref: WebServerSecGroup
       InstanceType: t2.micro
-      # BlockDeviceMappings:
-      # - DeviceName: "/dev/sdk"
-      #   Ebs:
-      #     VolumeSize: '8'
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: '8'
   WebAppGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
-      - Fn::ImportValue:
-          !Sub "${EnvironmentName}-PRIV-NETS"
-      LaunchConfigurationName:
-        Ref: WebAppLaunchTemplate
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRIV-NETS"
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WebAppLaunchTemplate
+      # Version: !GetAtt WebAppLaunchTemplate.LatestVersionNumber
       MinSize: '2'
       MaxSize: '6'
       DesiredCapacity: '2'
       TargetGroupARNs:
-      - Ref: WebAppTargetGroup
+        - Ref: WebAppTargetGroup
   WebAppLB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Subnets:
-      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
-      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
       SecurityGroups:
-      - Ref: LBSecGroup
+        - Ref: LBSecGroup
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-      - Type: forward
-        TargetGroupArn:
-          Ref: WebAppTargetGroup
+        - Type: forward
+          TargetGroupArn: !Ref WebAppTargetGroup
       LoadBalancerArn:
         Ref: WebAppLB
-      Port: '80'
+      Port: 80
       Protocol: HTTP
   ALBListenerRule:
-      Type: AWS::ElasticLoadBalancingV2::ListenerRule
-      Properties:
-        Actions:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
         - Type: forward
-          TargetGroupArn: !Ref 'WebAppTargetGroup'
-        Conditions:
+          TargetGroupArn: !Ref WebAppTargetGroup
+      Conditions:
         - Field: path-pattern
-          Values: [/]
-        ListenerArn: !Ref 'Listener'
-        Priority: 1
+          Values: ["/"]
+      ListenerArn: !Ref Listener
+      Priority: 1
   WebAppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
