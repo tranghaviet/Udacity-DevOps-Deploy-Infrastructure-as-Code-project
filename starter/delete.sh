@@ -1,1 +1,3 @@
-aws cloudformation delete-stack --stack-name $1 --region=us-east-1
+#!/bin/bash -e
+
+aws cloudformation delete-stack --stack-name UdagramStack --region=us-east-1
