@@ -5,15 +5,16 @@
 
 ```sh
 # Check the region in the create.sh file
-./create.sh
+./create.sh myFirstStack network.yml network-parameters.json
 # Check the region in the update.sh file
-./update.sh
+# ./update.sh mySecStack udagram.yml udagram-parameters.json
+./update.sh myFirstStack udagram.yml udagram-parameters.json
 ```
 
 ## Tear down instructions
 
 ```sh
-./delete.sh UdagramStack
+./delete.sh myFirstStack
 ```
 
 ## Other considerations
