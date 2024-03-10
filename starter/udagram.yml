@@ -6,32 +6,32 @@ Parameters:
     Type: String
 
 Resources:
-  InstanceProfile:
-      Type: AWS::IAM::InstanceProfile
-      Properties:
-        Roles:
-          - !Ref EC2Role
-  EC2Role:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: UdacityS3ReadOnlyC2
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: S3ReadOnlyAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:Get*
-                  - s3:List*
-                Resource: '*'
+  # InstanceProfile:
+  #     Type: AWS::IAM::InstanceProfile
+  #     Properties:
+  #       Roles:
+  #         - !Ref EC2Role
+  # EC2Role:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: UdacityS3ReadOnlyC2
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service: ec2.amazonaws.com
+  #           Action: sts:AssumeRole
+  #     Policies:
+  #       - PolicyName: S3ReadOnlyAccess
+  #         PolicyDocument:
+  #           Version: '2012-10-17'
+  #           Statement:
+  #             - Effect: Allow
+  #               Action:
+  #                 - s3:Get*
+  #                 - s3:List*
+  #               Resource: '*'
 
   LBSecGroup:
     Type: AWS::EC2::SecurityGroup
@@ -53,14 +53,14 @@ Resources:
   WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow http to our hosts and SSH from local only
+      GroupDescription: Allow http to our hosts and SSH
       VpcId:
         Fn::ImportValue:
           !Sub "${EnvironmentName}-VPCID"
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
+          FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 22
@@ -71,45 +71,33 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
-        # - IpProtocol: -1
-        #   CidrIp: 0.0.0.0/0
-  # UdagramWebAppUserData:
-  #   Type: AWS::CloudFormation::Resource
-  #   Properties:
-  #     Value: |
-  #       #!/bin/bash
-  #       apt-get update -y
-  #       sudo apt-get install nginx -y
-  #       service nginx start
 
 
-  WebAppLaunchTemplate:
-    Type: AWS::EC2::LaunchTemplate
+  WebAppLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      LaunchTemplateData:
-        UserData:
-          Fn::Base64: |
-            #!/bin/bash
-            sudo apt-get update -y
-            sudo apt-get install nginx -y
-            sudo service nginx start
-        ImageId: ami-0c7217cdde317cfec # ubuntu-22 at us-east-1
-        KeyName: udacity
-        SecurityGroups:
-          - Ref: WebServerSecGroup
-        InstanceType: t2.micro
-        BlockDeviceMappings:
-          - DeviceName: "/dev/sdk"
-            Ebs:
-              VolumeSize: '8'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update -y
+          sudo apt-get install nginx -y
+          sudo service nginx start
+      ImageId: ami-0c7217cdde317cfec # ubuntu-22 at us-east-1
+      KeyName: udacity
+      SecurityGroups:
+        - Ref: WebServerSecGroup
+      InstanceType: t2.micro
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: '8'
   WebAppGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
         - Fn::ImportValue: !Sub "${EnvironmentName}-PRIV-NETS"
-      LaunchTemplate:
-        LaunchTemplateId: !Ref WebAppLaunchTemplate
-        Version: !GetAtt WebAppLaunchTemplate.LatestVersionNumber
+      LaunchConfigurationName:
+        Ref: WebAppLaunchConfig
       MinSize: '2'
       MaxSize: '6'
       DesiredCapacity: '2'
@@ -123,7 +111,7 @@ Resources:
         - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
       SecurityGroups:
         - Ref: LBSecGroup
-  Listener:
+  LBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
@@ -142,7 +130,7 @@ Resources:
       Conditions:
         - Field: path-pattern
           Values: ["/"]
-      ListenerArn: !Ref Listener
+      ListenerArn: !Ref LBListener
       Priority: 1
   WebAppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -152,9 +140,15 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 8
       HealthyThresholdCount: 2
-      Port: 8080
+      Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 5
       VpcId:
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
+Outputs:
+    LoadBanlancerEndpoint:
+        Description: Public endpoint of the load banlancer
+        Value: !Join [ "", [ 'http://', !GetAtt WebAppLB.DNSName  ]]
+        Export:
+          Name: !Sub ${EnvironmentName}-LB-URL
