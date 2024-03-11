@@ -6,32 +6,6 @@ Parameters:
     Type: String
 
 Resources:
-  # InstanceProfile:
-  #     Type: AWS::IAM::InstanceProfile
-  #     Properties:
-  #       Roles:
-  #         - !Ref EC2Role
-  # EC2Role:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     RoleName: UdacityS3ReadOnlyC2
-  #     AssumeRolePolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: ec2.amazonaws.com
-  #           Action: sts:AssumeRole
-  #     Policies:
-  #       - PolicyName: S3ReadOnlyAccess
-  #         PolicyDocument:
-  #           Version: '2012-10-17'
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - s3:Get*
-  #                 - s3:List*
-  #               Resource: '*'
 
   LBSecGroup:
     Type: AWS::EC2::SecurityGroup
