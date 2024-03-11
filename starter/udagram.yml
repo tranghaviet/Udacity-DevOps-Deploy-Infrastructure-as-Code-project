@@ -56,6 +56,7 @@ Resources:
           sudo apt-get update -y
           sudo apt-get install nginx -y
           sudo service nginx start
+          sudo echo 'it works! Udagram, Udacity' > /var/www/html/index.html
       ImageId: ami-0c7217cdde317cfec # ubuntu-22 at us-east-1
       KeyName: udacity
       SecurityGroups:
